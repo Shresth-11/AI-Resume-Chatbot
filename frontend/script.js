@@ -76,7 +76,7 @@ async function uploadFile(file) {
         sendBtn.disabled = false;
         chatInput.focus();
 
-        addBotMessage("✅ Resume uploaded! Ask me anything about the candidate — skills, experience, education, projects, etc.");
+        addBotMessage("✅ Resume uploaded! Ask me anything about Shresth Jaiswal — skills, experience, education, projects, etc.");
     } catch (err) {
         addBotMessage("❌ Network error. Make sure the server is running.");
         dropZone.classList.remove("hidden");

@@ -35,29 +35,32 @@ if not api_key:
 client = Groq(api_key=api_key)
 model = "openai/gpt-oss-120b"
 
+# Candidate information
+CANDIDATE_NAME = "Shresth Jaiswal"
+
 # frontend directory is sibling to backend/
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
-app = FastAPI()
+app = FastAPI(title="Shresth Jaiswal — AI Resume Chatbot API")
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
 # In-memory store for resume text (per session — simple approach)
 resume_store = {"text": None}
 
-SYSTEM_PROMPT = """You are a professional AI assistant embedded in a portfolio website.
-Your ONLY job is to answer questions about the candidate based on their resume.
+SYSTEM_PROMPT = f"""You are a professional AI assistant embedded in {CANDIDATE_NAME}'s portfolio website.
+Your ONLY job is to answer questions about {CANDIDATE_NAME} based on their resume.
 
 STRICT RULES:
-1. ONLY answer questions that can be answered from the resume provided below.
-2. If a question is NOT related to the resume or the candidate, politely refuse.
-   Say: "I can only answer questions about the candidate's resume. Please ask something related to their skills, experience, education, or projects."
+1. ONLY answer questions that can be answered from the resume provided below about {CANDIDATE_NAME}.
+2. If a question is NOT related to {CANDIDATE_NAME} or their resume, politely refuse.
+   Say: "I can only answer questions about {CANDIDATE_NAME}'s resume. Please ask something related to their skills, experience, education, or projects."
 3. Do NOT make up or infer information that is not explicitly in the resume.
 4. Be professional, concise, and helpful — remember, HR recruiters are asking.
 5. Format answers cleanly. Use bullet points where appropriate.
-6. If the resume has not been uploaded yet, say: "No resume has been uploaded yet. Please upload a resume first."
+6. If the resume has not been uploaded yet, say: "No resume has been uploaded yet. Please upload {CANDIDATE_NAME}'s resume first."
 
 RESUME:
-{resume_text}
+{{resume_text}}
 """
 
 
