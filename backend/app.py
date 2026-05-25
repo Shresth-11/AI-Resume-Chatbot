@@ -28,12 +28,26 @@ for env_candidate in [
     if env_candidate.exists():
         load_dotenv(dotenv_path=env_candidate)
 
-api_key = os.getenv("GROQ_API_KEY")
-if not api_key:
-    raise ValueError("GROQ_API_KEY not found. Set it in .env locally or as an environment variable on your hosting platform.")
+import httpx
 
-client = Groq(api_key=api_key)
 model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+
+def get_groq_client():
+    key = (os.getenv("GROQ_API_KEY") or "").strip()
+    if not key:
+        return None
+    try:
+        import certifi
+        verify_ssl = certifi.where()
+    except Exception:
+        verify_ssl = True
+
+    http_client = httpx.Client(
+        verify=verify_ssl,
+        timeout=httpx.Timeout(45.0, connect=15.0),
+        follow_redirects=True,
+    )
+    return Groq(api_key=key, http_client=http_client)
 
 # Candidate information
 CANDIDATE_NAME = "Shresth Jaiswal"
@@ -147,44 +161,99 @@ async def chat(request: Request):
     ]
 
     def generate():
-        last_error = None
-        stream = None
-        candidate_models = [
-            model,
-            "openai/gpt-oss-20b",
-            "llama-3.3-70b-versatile",
-            "llama-3.1-8b-instant"
-        ]
-
-        for candidate_model in candidate_models:
-            try:
-                stream = client.chat.completions.create(
-                    model=candidate_model,
-                    messages=messages,
-                    temperature=0.3,
-                    max_tokens=1024,
-                    stream=True
-                )
-                break
-            except Exception as e:
-                last_error = e
-                continue
-
-        if stream is None:
-            error_details = str(last_error) if last_error else "Failed to initialize LLM stream"
-            yield f"data: {json.dumps({'error': error_details})}\n\n"
+        raw_key = (os.getenv("GROQ_API_KEY") or "").strip()
+        if not raw_key:
+            yield f"data: {json.dumps({'error': 'GROQ_API_KEY environment variable is missing.'})}\n\n"
             yield "data: [DONE]\n\n"
             return
 
+        candidate_models = [
+            model,
+            "qwen/qwen3.8-27b",
+            "openai/gpt-oss-20b",
+            "openai/gpt-oss-120b"
+        ]
+
+        last_error = None
+
+        # 1. Try with fresh Groq client + custom httpx client
         try:
-            for chunk in stream:
-                delta = chunk.choices[0].delta
-                token = getattr(delta, "content", None) or getattr(delta, "reasoning", None)
-                if token:
-                    yield f"data: {json.dumps({'token': token})}\n\n"
-            yield "data: [DONE]\n\n"
+            client = get_groq_client()
+            if client:
+                for candidate_model in candidate_models:
+                    try:
+                        stream = client.chat.completions.create(
+                            model=candidate_model,
+                            messages=messages,
+                            temperature=0.3,
+                            max_tokens=1024,
+                            stream=True
+                        )
+                        for chunk in stream:
+                            delta = chunk.choices[0].delta
+                            token = getattr(delta, "content", None) or getattr(delta, "reasoning", None)
+                            if token:
+                                yield f"data: {json.dumps({'token': token})}\n\n"
+                        yield "data: [DONE]\n\n"
+                        return
+                    except Exception as e:
+                        last_error = e
+                        continue
         except Exception as e:
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
-            yield "data: [DONE]\n\n"
+            last_error = e
+
+        # 2. Fallback to direct HTTP streaming via httpx if SDK socket failed
+        try:
+            try:
+                import certifi
+                verify_target = certifi.where()
+            except Exception:
+                verify_target = True
+
+            with httpx.Client(verify=verify_target, timeout=httpx.Timeout(45.0, connect=15.0)) as http_c:
+                for candidate_model in candidate_models:
+                    try:
+                        with http_c.stream(
+                            "POST",
+                            "https://api.groq.com/openai/v1/chat/completions",
+                            headers={
+                                "Authorization": f"Bearer {raw_key}",
+                                "Content-Type": "application/json"
+                            },
+                            json={
+                                "model": candidate_model,
+                                "messages": messages,
+                                "temperature": 0.3,
+                                "max_tokens": 1024,
+                                "stream": True
+                            }
+                        ) as resp:
+                            if resp.status_code == 200:
+                                for line in resp.iter_lines():
+                                    if not line or not line.startswith("data: "):
+                                        continue
+                                    payload = line[6:].strip()
+                                    if payload == "[DONE]":
+                                        break
+                                    try:
+                                        chunk_json = json.loads(payload)
+                                        delta = chunk_json.get("choices", [{}])[0].get("delta", {})
+                                        token = delta.get("content") or delta.get("reasoning")
+                                        if token:
+                                            yield f"data: {json.dumps({'token': token})}\n\n"
+                                    except Exception:
+                                        pass
+                                yield "data: [DONE]\n\n"
+                                return
+                            else:
+                                last_error = f"Groq HTTP {resp.status_code}: {resp.read().decode('utf-8', errors='ignore')}"
+                    except Exception as e:
+                        last_error = e
+        except Exception as e:
+            last_error = e
+
+        error_details = str(last_error) if last_error else "Failed to connect to Groq"
+        yield f"data: {json.dumps({'error': error_details})}\n\n"
+        yield "data: [DONE]\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")

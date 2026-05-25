@@ -5,3 +5,5 @@ groq
 pypdf
 python-docx
 python-multipart
+httpx
+certifi
