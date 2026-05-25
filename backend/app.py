@@ -87,27 +87,35 @@ RESUME:
 
 
 def extract_pdf_text(file_bytes: bytes) -> str:
-    reader = PdfReader(io.BytesIO(file_bytes))
-    text = ""
-    for page in reader.pages:
-        page_text = page.extract_text()
-        if page_text:
-            text += page_text + "\n"
-    return text
+    try:
+        reader = PdfReader(io.BytesIO(file_bytes))
+        text = ""
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+        return text
+    except Exception as e:
+        print(f"PDF extraction error: {e}", flush=True)
+        return ""
 
 
 def extract_docx_text(file_bytes: bytes) -> str:
-    doc = Document(io.BytesIO(file_bytes))
-    text = ""
-    for para in doc.paragraphs:
-        if para.text.strip():
-            text += para.text + "\n"
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                if cell.text.strip():
-                    text += cell.text + "\n"
-    return text
+    try:
+        doc = Document(io.BytesIO(file_bytes))
+        text = ""
+        for para in doc.paragraphs:
+            if para.text.strip():
+                text += para.text + "\n"
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if cell.text.strip():
+                        text += cell.text + "\n"
+        return text
+    except Exception as e:
+        print(f"DOCX extraction error: {e}", flush=True)
+        return ""
 
 
 @app.api_route("/", methods=["GET", "HEAD"])
