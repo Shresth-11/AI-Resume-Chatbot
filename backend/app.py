@@ -147,17 +147,43 @@ async def chat(request: Request):
     ]
 
     def generate():
-        stream = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0.3,
-            max_tokens=1024,
-            stream=True
-        )
-        for chunk in stream:
-            delta = chunk.choices[0].delta
-            if delta.content:
-                yield f"data: {json.dumps({'token': delta.content})}\n\n"
-        yield "data: [DONE]\n\n"
+        last_error = None
+        stream = None
+        candidate_models = [
+            model,
+            "openai/gpt-oss-20b",
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant"
+        ]
+
+        for candidate_model in candidate_models:
+            try:
+                stream = client.chat.completions.create(
+                    model=candidate_model,
+                    messages=messages,
+                    temperature=0.3,
+                    max_tokens=1024,
+                    stream=True
+                )
+                break
+            except Exception as e:
+                last_error = e
+                continue
+
+        if stream is None:
+            error_details = str(last_error) if last_error else "Failed to initialize LLM stream"
+            yield f"data: {json.dumps({'error': error_details})}\n\n"
+            yield "data: [DONE]\n\n"
+            return
+
+        try:
+            for chunk in stream:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    yield f"data: {json.dumps({'token': delta.content})}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield "data: [DONE]\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")

@@ -154,6 +154,12 @@ async function sendMessage(message) {
 
                 try {
                     const parsed = JSON.parse(payload);
+                    if (parsed.error) {
+                        fullText = `⚠️ ${parsed.error}`;
+                        textEl.innerHTML = `<span style="color: #ef4444; font-weight: 500;">${fullText}</span>`;
+                        scrollToBottom();
+                        break;
+                    }
                     if (parsed.token) {
                         fullText += parsed.token;
                         textEl.innerHTML = formatText(fullText);
