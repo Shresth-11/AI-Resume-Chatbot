@@ -33,7 +33,7 @@ if not api_key:
     raise ValueError("GROQ_API_KEY not found. Set it in .env locally or as an environment variable on your hosting platform.")
 
 client = Groq(api_key=api_key)
-model = "openai/gpt-oss-120b"
+model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
 # Candidate information
 CANDIDATE_NAME = "Shresth Jaiswal"
@@ -179,8 +179,9 @@ async def chat(request: Request):
         try:
             for chunk in stream:
                 delta = chunk.choices[0].delta
-                if delta.content:
-                    yield f"data: {json.dumps({'token': delta.content})}\n\n"
+                token = getattr(delta, "content", None) or getattr(delta, "reasoning", None)
+                if token:
+                    yield f"data: {json.dumps({'token': token})}\n\n"
             yield "data: [DONE]\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
