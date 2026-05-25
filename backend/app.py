@@ -96,9 +96,14 @@ def extract_docx_text(file_bytes: bytes) -> str:
     return text
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def serve_index():
     return FileResponse(str(FRONTEND_DIR / "index.html"))
+
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health_check():
+    return {"status": "healthy"}
 
 
 @app.post("/upload")

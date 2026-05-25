@@ -2,7 +2,8 @@
 
 > An interactive, AI-powered portfolio assistant that allows recruiters and hiring managers to ask questions and explore candidate credentials directly from their resume in real time.
 
-[![Live Demo](https://img.shields.io/badge/Demo-Live%20on%20Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://resume-ai-chatbot-e39p.onrender.com/)
+[![Live Demo](https://img.shields.io/badge/Demo-Live%20on%20Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)](https://ai-resume-chatbot-nu.vercel.app/)
+[![Render Demo](https://img.shields.io/badge/Demo-Live%20on%20Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://ai-resume-chatbot-z6zq.onrender.com)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Groq](https://img.shields.io/badge/Groq-Fast%20Inference-F05032?style=for-the-badge)](https://groq.com)
@@ -13,7 +14,8 @@
 ## 🌐 Live Application
 
 Explore the deployed app live:  
-👉 **[https://resume-ai-chatbot-e39p.onrender.com/](https://resume-ai-chatbot-e39p.onrender.com/)**
+- 🚀 **Primary Demo (Vercel)**: **[https://ai-resume-chatbot-nu.vercel.app/](https://ai-resume-chatbot-nu.vercel.app/)**
+- ☁️ **Mirror Demo (Render)**: **[https://ai-resume-chatbot-z6zq.onrender.com](https://ai-resume-chatbot-z6zq.onrender.com)**
 
 ---
 
@@ -178,7 +180,8 @@ Open your browser and navigate to:
 **Shresth Jaiswal**  
 - **GitHub**: [@Shresth-11](https://github.com/Shresth-11)  
 - **Email**: jaisshresth143@gmail.com  
-- **Live Demo**: [resume-ai-chatbot-e39p.onrender.com](https://resume-ai-chatbot-e39p.onrender.com/)
+- **Live Demo (Vercel)**: [ai-resume-chatbot-nu.vercel.app](https://ai-resume-chatbot-nu.vercel.app/)  
+- **Live Demo (Render)**: [ai-resume-chatbot-z6zq.onrender.com](https://ai-resume-chatbot-z6zq.onrender.com)
 
 ---
 
