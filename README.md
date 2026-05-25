@@ -145,19 +145,31 @@ Open your browser and navigate to:
 
 ---
 
-## ☁️ Deployment on Render
+## ☁️ Deployment
 
-This project is configured for easy deployment on **Render**:
+### Option 1: Deploy on Render
 
-1. Create a new **Web Service** on [Render](https://render.com).
-2. Connect your GitHub repository: `https://github.com/Shresth-11/AI-Resume-Chatbot`.
-3. Set the following build settings:
-   - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r backend/requirements.txt`
+1. Log in to [Render Dashboard](https://dashboard.render.com/).
+2. Click **New +** ➔ **Web Service**.
+3. Connect your repository: `https://github.com/Shresth-11/AI-Resume-Chatbot`.
+4. Configure the settings:
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `uvicorn backend.app:app --host 0.0.0.0 --port $PORT`
-4. In the **Environment Variables** section, add:
-   - `GROQ_API_KEY` = `<your_api_key>`
-5. Click **Deploy Web Service**.
+5. In **Environment Variables**, add:
+   - `GROQ_API_KEY`: `<your_groq_api_key>`
+6. Click **Deploy Web Service**.
+
+---
+
+### Option 2: Deploy on Vercel
+
+1. Log in to [Vercel](https://vercel.com).
+2. Click **Add New...** ➔ **Project**.
+3. Import your GitHub repository: `https://github.com/Shresth-11/AI-Resume-Chatbot`.
+4. Under **Environment Variables**, add:
+   - `GROQ_API_KEY`: `<your_groq_api_key>`
+5. Click **Deploy**. Vercel will automatically use `vercel.json` and `api/index.py` to launch your app.
 
 ---
 

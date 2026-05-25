@@ -10,6 +10,7 @@ const sendBtn = document.getElementById("send-btn");
 
 let resumeUploaded = false;
 let isStreaming = false;
+let currentResumeText = "";
 
 // ===== Upload Logic =====
 
@@ -38,6 +39,7 @@ fileInput.addEventListener("change", () => {
 
 clearBtn.addEventListener("click", () => {
     resumeUploaded = false;
+    currentResumeText = "";
     uploadStatus.classList.add("hidden");
     dropZone.classList.remove("hidden");
     chatInput.disabled = true;
@@ -71,6 +73,7 @@ async function uploadFile(file) {
 
         resumeUploaded = true;
         uploadedFilename.textContent = data.filename;
+        currentResumeText = data.resume_text || "";
         uploadStatus.classList.remove("hidden");
         chatInput.disabled = false;
         sendBtn.disabled = false;
@@ -119,7 +122,10 @@ async function sendMessage(message) {
         const res = await fetch("/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({
+                message,
+                resume_text: currentResumeText
+            })
         });
 
         if (!res.ok) {

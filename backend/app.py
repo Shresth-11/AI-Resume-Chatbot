@@ -38,8 +38,16 @@ model = "openai/gpt-oss-120b"
 # Candidate information
 CANDIDATE_NAME = "Shresth Jaiswal"
 
-# frontend directory is sibling to backend/
+# Frontend directory resolution (works for local, Render, and Vercel)
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+for candidate in [
+    Path(__file__).resolve().parent.parent / "frontend",
+    Path(__file__).resolve().parent / "frontend",
+    Path.cwd() / "frontend",
+]:
+    if candidate.exists():
+        FRONTEND_DIR = candidate
+        break
 
 app = FastAPI(title="Shresth Jaiswal — AI Resume Chatbot API")
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
@@ -113,7 +121,7 @@ async def upload_resume(file: UploadFile = File(...)):
         return JSONResponse({"error": "Could not extract text from the file"}, status_code=400)
 
     resume_store["text"] = text
-    return {"message": "Resume uploaded successfully", "filename": file.filename}
+    return {"message": "Resume uploaded successfully", "filename": file.filename, "resume_text": text}
 
 
 @app.post("/chat")
@@ -124,7 +132,8 @@ async def chat(request: Request):
     if not user_message:
         return JSONResponse({"error": "Empty message"}, status_code=400)
 
-    resume_text = resume_store.get("text") or "No resume uploaded yet."
+    # Use client-passed resume text (supports serverless / Vercel) or fallback to server memory (Render)
+    resume_text = body.get("resume_text") or resume_store.get("text") or "No resume uploaded yet."
     system_content = SYSTEM_PROMPT.format(resume_text=resume_text)
 
     messages = [
